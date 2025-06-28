@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real Estate Finder</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .search-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .search-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            align-items: end;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 12px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .search-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: white;
+            font-size: 18px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .properties-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .property-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .property-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+
+        .property-image {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(45deg, #f0f0f0, #e0e0e0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: #ccc;
+        }
+
+        .property-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .property-details {
+            padding: 20px;
+        }
+
+        .property-price {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .property-address {
+            font-size: 1.1rem;
+            color: #333;
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+
+        .property-features {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .feature {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .feature-icon {
+            font-size: 16px;
+        }
+
+        .property-description {
+            color: #666;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+
+        .property-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a6fd8;
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #333;
+            border: 1px solid #e1e5e9;
+        }
+
+        .btn-secondary:hover {
+            background: #e9ecef;
+        }
+
+        .no-results {
+            text-align: center;
+            color: white;
+            font-size: 18px;
+            padding: 40px;
+        }
+
+        .filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn.active {
+            background: white;
+            color: #667eea;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            color: white;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        @media (max-width: 768px) {
+            .search-form {
+                grid-template-columns: 1fr;
+            }
+            
+            .properties-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏠 Real Estate Finder</h1>
+            <p>Discover your perfect home in the neighborhood</p>
+        </div>
+
+        <div class="search-section">
+            <form class="search-form" id="searchForm">
+                <div class="form-group">
+                    <label for="location">Location</label>
+                    <input type="text" id="location" placeholder="Enter city, neighborhood..." value="New York">
+                </div>
+                <div class="form-group">
+                    <label for="propertyType">Property Type</label>
+                    <select id="propertyType">
+                        <option value="">All Types</option>
+                        <option value="house">House</option>
+                        <option value="apartment">Apartment</option>
+                        <option value="condo">Condo</option>
+                        <option value="townhouse">Townhouse</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="minPrice">Min Price</label>
+                    <input type="number" id="minPrice" placeholder="Min price">
+                </div>
+                <div class="form-group">
+                    <label for="maxPrice">Max Price</label>
+                    <input type="number" id="maxPrice" placeholder="Max price">
+                </div>
+                <div class="form-group">
+                    <label for="bedrooms">Bedrooms</label>
+                    <select id="bedrooms">
+                        <option value="">Any</option>
+                        <option value="1">1+</option>
+                        <option value="2">2+</option>
+                        <option value="3">3+</option>
+                        <option value="4">4+</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="search-btn">🔍 Search Properties</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="stats" id="stats">
+            <span>Found <span id="propertyCount">0</span> properties</span>
+            <span>Average price: $<span id="avgPrice">0</span></span>
+        </div>
+
+        <div class="filters" id="filters">
+            <button class="filter-btn active" data-filter="all">All</button>
+            <button class="filter-btn" data-filter="house">Houses</button>
+            <button class="filter-btn" data-filter="apartment">Apartments</button>
+            <button class="filter-btn" data-filter="condo">Condos</button>
+            <button class="filter-btn" data-filter="townhouse">Townhouses</button>
+        </div>
+
+        <div class="loading" id="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Searching for properties...</p>
+        </div>
+
+        <div class="properties-grid" id="propertiesGrid">
+            <!-- Properties will be loaded here -->
+        </div>
+
+        <div class="no-results" id="noResults" style="display: none;">
+            <h3>No properties found</h3>
+            <p>Try adjusting your search criteria</p>
+        </div>
+    </div>
+
+    <script>
+        // Sample API data - In a real app, you'd use actual real estate APIs
+        const sampleProperties = [
+            {
+                id: 1,
+                title: "Modern Family Home",
+                address: "123 Oak Street, New York, NY 10001",
+                price: 750000,
+                type: "house",
+                bedrooms: 4,
+                bathrooms: 3,
+                sqft: 2500,
+                image: "🏠",
+                description: "Beautiful modern family home with spacious rooms and a large backyard. Perfect for families looking for comfort and style.",
+                features: ["Garage", "Garden", "Fireplace", "Central AC"]
+            },
+            {
+                id: 2,
+                title: "Luxury Apartment",
+                address: "456 Park Avenue, New York, NY 10022",
+                price: 1200000,
+                type: "apartment",
+                bedrooms: 3,
+                bathrooms: 2,
+                sqft: 1800,
+                image: "🏢",
+                description: "Luxurious apartment in the heart of Manhattan with stunning city views and premium amenities.",
+                features: ["Doorman", "Gym", "Pool", "Balcony"]
+            },
+            {
+                id: 3,
+                title: "Cozy Condo",
+                address: "789 Broadway, New York, NY 10003",
+                price: 450000,
+                type: "condo",
+                bedrooms: 2,
+                bathrooms: 2,
+                sqft: 1200,
+                image: "🏘️",
+                description: "Cozy and well-maintained condo in a great neighborhood with easy access to public transportation.",
+                features: ["Parking", "Storage", "Laundry", "Security"]
+            },
+            {
+                id: 4,
+                title: "Elegant Townhouse",
+                address: "321 Madison Avenue, New York, NY 10017",
+                price: 950000,
+                type: "townhouse",
+                bedrooms: 5,
+                bathrooms: 4,
+                sqft: 3200,
+                image: "🏛️",
+                description: "Elegant townhouse with classic architecture and modern updates. Perfect for large families.",
+                features: ["Garden", "Basement", "Fireplace", "Private Parking"]
+            },
+            {
+                id: 5,
+                title: "Downtown Loft",
+                address: "654 5th Avenue, New York, NY 10019",
+                price: 680000,
+                type: "apartment",
+                bedrooms: 2,
+                bathrooms: 1,
+                sqft: 1400,
+                image: "🏭",
+                description: "Industrial-style loft in the heart of downtown with high ceilings and exposed brick walls.",
+                features: ["High Ceilings", "Exposed Brick", "Open Plan", "Rooftop Access"]
+            },
+            {
+                id: 6,
+                title: "Suburban Family Home",
+                address: "987 Queens Boulevard, New York, NY 11375",
+                price: 820000,
+                type: "house",
+                bedrooms: 3,
+                bathrooms: 2,
+                sqft: 2100,
+                image: "🏡",
+                description: "Charming suburban home with a large yard and excellent school district. Perfect for growing families.",
+                features: ["Large Yard", "Deck", "Finished Basement", "2-Car Garage"]
+            }
+        ];
+
+        let currentProperties = [...sampleProperties];
+        let currentFilter = 'all';
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            displayProperties(currentProperties);
+            setupEventListeners();
+            updateStats();
+        });
+
+        function setupEventListeners() {
+            // Search form
+            document.getElementById('searchForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                searchProperties();
+            });
+
+            // Filter buttons
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const filter = this.dataset.filter;
+                    setActiveFilter(filter);
+                    filterProperties(filter);
+                });
+            });
+        }
+
+        function searchProperties() {
+            showLoading(true);
+            
+            // Simulate API call delay
+            setTimeout(() => {
+                const location = document.getElementById('location').value;
+                const propertyType = document.getElementById('propertyType').value;
+                const minPrice = document.getElementById('minPrice').value;
+                const maxPrice = document.getElementById('maxPrice').value;
+                const bedrooms = document.getElementById('bedrooms').value;
+
+                // Filter properties based on search criteria
+                let filtered = sampleProperties.filter(property => {
+                    let matches = true;
+
+                    // Location filter (simplified)
+                    if (location && !property.address.toLowerCase().includes(location.toLowerCase())) {
+                        matches = false;
+                    }
+
+                    // Property type filter
+                    if (propertyType && property.type !== propertyType) {
+                        matches = false;
+                    }
+
+                    // Price range filter
+                    if (minPrice && property.price < parseInt(minPrice)) {
+                        matches = false;
+                    }
+                    if (maxPrice && property.price > parseInt(maxPrice)) {
+                        matches = false;
+                    }
+
+                    // Bedrooms filter
+                    if (bedrooms && property.bedrooms < parseInt(bedrooms)) {
+                        matches = false;
+                    }
+
+                    return matches;
+                });
+
+                currentProperties = filtered;
+                displayProperties(filtered);
+                updateStats();
+                showLoading(false);
+            }, 1000);
+        }
+
+        function filterProperties(filter) {
+            currentFilter = filter;
+            
+            let filtered = currentProperties;
+            if (filter !== 'all') {
+                filtered = currentProperties.filter(property => property.type === filter);
+            }
+
+            displayProperties(filtered);
+            updateStats();
+        }
+
+        function setActiveFilter(filter) {
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-filter="${filter}"]`).classList.add('active');
+        }
+
+        function displayProperties(properties) {
+            const grid = document.getElementById('propertiesGrid');
+            const noResults = document.getElementById('noResults');
+
+            if (properties.length === 0) {
+                grid.innerHTML = '';
+                noResults.style.display = 'block';
+                return;
+            }
+
+            noResults.style.display = 'none';
+            grid.innerHTML = properties.map(property => `
+                <div class="property-card">
+                    <div class="property-image">
+                        ${property.image}
+                    </div>
+                    <div class="property-details">
+                        <div class="property-price">$${property.price.toLocaleString()}</div>
+                        <div class="property-address">${property.address}</div>
+                        <div class="property-features">
+                            <span class="feature">
+                                <span class="feature-icon">🛏️</span>
+                                ${property.bedrooms} beds
+                            </span>
+                            <span class="feature">
+                                <span class="feature-icon">🚿</span>
+                                ${property.bathrooms} baths
+                            </span>
+                            <span class="feature">
+                                <span class="feature-icon">📏</span>
+                                ${property.sqft} sqft
+                            </span>
+                        </div>
+                        <div class="property-description">${property.description}</div>
+                        <div class="property-actions">
+                            <a href="#" class="btn btn-primary" onclick="viewProperty(${property.id})">View Details</a>
+                            <a href="#" class="btn btn-secondary" onclick="contactAgent(${property.id})">Contact Agent</a>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateStats() {
+            const count = currentProperties.length;
+            const avgPrice = count > 0 ? Math.round(currentProperties.reduce((sum, p) => sum + p.price, 0) / count) : 0;
+            
+            document.getElementById('propertyCount').textContent = count;
+            document.getElementById('avgPrice').textContent = avgPrice.toLocaleString();
+        }
+
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+        }
+
+        function viewProperty(id) {
+            const property = sampleProperties.find(p => p.id === id);
+            if (property) {
+                alert(`Viewing details for: ${property.title}\nAddress: ${property.address}\nPrice: $${property.price.toLocaleString()}`);
+            }
+        }
+
+        function contactAgent(id) {
+            const property = sampleProperties.find(p => p.id === id);
+            if (property) {
+                alert(`Contacting agent for: ${property.title}\nPhone: (555) 123-4567\nEmail: agent@realestate.com`);
+            }
+        }
+
+        // Real API integration example (commented out)
+        /*
+        async function fetchPropertiesFromAPI(location) {
+            try {
+                const response = await fetch(`https://api.realestate.com/properties?location=${encodeURIComponent(location)}`);
+                const data = await response.json();
+                return data.properties;
+            } catch (error) {
+                console.error('Error fetching properties:', error);
+                return [];
+            }
+        }
+        */
+    </script>
+</body>
+</html> 
