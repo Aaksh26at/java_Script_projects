@@ -1,0 +1,1314 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dear Doctor, Where Are You? 😤</title>
+<style>
+  /* =============================================
+     ROOT VARIABLES & THEME
+  ============================================= */
+  :root {
+    --bg-1: #fce4f5;
+    --bg-2: #ede4fc;
+    --bg-3: #e4eeff;
+    --glass: rgba(255,255,255,0.25);
+    --glass-border: rgba(255,255,255,0.45);
+    --glass-dark: rgba(255,255,255,0.08);
+    --text-primary: #2d1b4e;
+    --text-secondary: #5a3d7a;
+    --text-muted: #8b6daa;
+    --accent-pink: #f472b6;
+    --accent-purple: #a855f7;
+    --accent-blue: #60a5fa;
+    --card-bg: rgba(255,255,255,0.35);
+    --card-border: rgba(255,255,255,0.6);
+    --shadow: 0 8px 32px rgba(168,85,247,0.15);
+    --btn-primary: linear-gradient(135deg, #f472b6, #a855f7);
+    --btn-secondary: linear-gradient(135deg, #60a5fa, #a855f7);
+  }
+  [data-theme="dark"] {
+    --bg-1: #1a0533;
+    --bg-2: #0f0a2e;
+    --bg-3: #0a1628;
+    --glass: rgba(255,255,255,0.07);
+    --glass-border: rgba(255,255,255,0.12);
+    --text-primary: #f0e8ff;
+    --text-secondary: #c4a8e8;
+    --text-muted: #8b6daa;
+    --card-bg: rgba(255,255,255,0.06);
+    --card-border: rgba(255,255,255,0.12);
+    --shadow: 0 8px 32px rgba(168,85,247,0.3);
+  }
+
+  /* =============================================
+     RESET & BASE
+  ============================================= */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: linear-gradient(135deg, var(--bg-1) 0%, var(--bg-2) 50%, var(--bg-3) 100%);
+    background-attachment: fixed;
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow-x: hidden;
+    transition: background 0.4s, color 0.4s;
+  }
+
+  /* =============================================
+     LOADING SCREEN
+  ============================================= */
+  #loading-screen {
+    position: fixed; inset: 0; z-index: 9999;
+    background: linear-gradient(135deg, #fce4f5, #ede4fc, #e4eeff);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 1.5rem;
+    transition: opacity 0.6s, visibility 0.6s;
+  }
+  #loading-screen.hidden { opacity: 0; visibility: hidden; }
+  .loading-pulse {
+    font-size: 4rem;
+    animation: heartbeat 0.8s ease-in-out infinite;
+  }
+  .loading-text {
+    font-size: 1.3rem; font-weight: 700;
+    color: #a855f7;
+    text-align: center;
+  }
+  .loading-sub { font-size: 0.9rem; color: #8b6daa; }
+  .loading-bar-wrap {
+    width: 220px; height: 6px;
+    background: rgba(168,85,247,0.2);
+    border-radius: 99px; overflow: hidden;
+  }
+  .loading-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #f472b6, #a855f7, #60a5fa);
+    border-radius: 99px;
+    animation: loadprogress 2s ease-in-out forwards;
+  }
+  @keyframes loadprogress { from { width: 0% } to { width: 100% } }
+
+  /* =============================================
+     PARTICLE BACKGROUND
+  ============================================= */
+  #particles { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+  .particle {
+    position: absolute;
+    border-radius: 50%;
+    animation: floatParticle linear infinite;
+    opacity: 0.35;
+  }
+  @keyframes floatParticle {
+    0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+    10% { opacity: 0.35; }
+    90% { opacity: 0.35; }
+    100% { transform: translateY(-10vh) rotate(720deg); opacity: 0; }
+  }
+
+  /* =============================================
+     FLOATING EMOJIS
+  ============================================= */
+  .float-emoji {
+    position: fixed;
+    font-size: 1.8rem;
+    pointer-events: none;
+    z-index: 1;
+    animation: floatUp linear infinite;
+    opacity: 0;
+  }
+  @keyframes floatUp {
+    0% { transform: translateY(0) rotate(-10deg); opacity: 0; }
+    20% { opacity: 0.7; }
+    80% { opacity: 0.5; }
+    100% { transform: translateY(-120vh) rotate(30deg); opacity: 0; }
+  }
+
+  /* =============================================
+     NAV BAR
+  ============================================= */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    backdrop-filter: blur(18px) saturate(1.5);
+    background: var(--glass);
+    border-bottom: 1px solid var(--glass-border);
+    padding: 0.8rem 2rem;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 1rem;
+  }
+  .nav-logo { font-size: 1.1rem; font-weight: 800; color: var(--accent-purple); }
+  .nav-links {
+    display: flex; gap: 1.5rem; list-style: none;
+  }
+  .nav-links a {
+    text-decoration: none; color: var(--text-secondary);
+    font-size: 0.85rem; font-weight: 600;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--accent-pink); }
+  .nav-actions { display: flex; gap: 0.6rem; align-items: center; }
+  .icon-btn {
+    background: var(--card-bg); border: 1px solid var(--card-border);
+    border-radius: 50%; width: 38px; height: 38px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 1.1rem;
+    transition: transform 0.2s, background 0.2s;
+    backdrop-filter: blur(10px);
+  }
+  .icon-btn:hover { transform: scale(1.12); }
+  @media (max-width: 640px) {
+    .nav-links { display: none; }
+    nav { padding: 0.7rem 1rem; }
+  }
+
+  /* =============================================
+     MAIN LAYOUT
+  ============================================= */
+  main { position: relative; z-index: 2; padding-top: 80px; }
+  .section { padding: 5rem 1.5rem; max-width: 900px; margin: 0 auto; }
+  .section-sm { padding: 3rem 1.5rem; max-width: 900px; margin: 0 auto; }
+
+  /* =============================================
+     GLASS CARD
+  ============================================= */
+  .glass-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 24px;
+    backdrop-filter: blur(20px) saturate(1.4);
+    box-shadow: var(--shadow);
+    padding: 2rem;
+    transition: transform 0.3s;
+  }
+  .glass-card:hover { transform: translateY(-3px); }
+
+  /* =============================================
+     BUTTONS
+  ============================================= */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    gap: 0.5rem; padding: 0.85rem 2rem;
+    border: none; border-radius: 99px; cursor: pointer;
+    font-size: 1rem; font-weight: 700;
+    transition: transform 0.2s, box-shadow 0.2s;
+    text-decoration: none;
+  }
+  .btn:active { transform: scale(0.96); }
+  .btn-primary {
+    background: var(--btn-primary);
+    color: white;
+    box-shadow: 0 4px 20px rgba(244,114,182,0.45);
+  }
+  .btn-primary:hover { box-shadow: 0 6px 28px rgba(244,114,182,0.6); transform: translateY(-2px); }
+  .btn-secondary {
+    background: var(--btn-secondary);
+    color: white;
+    box-shadow: 0 4px 20px rgba(96,165,250,0.35);
+  }
+  .btn-secondary:hover { transform: translateY(-2px); }
+  .btn-ghost {
+    background: var(--card-bg);
+    border: 1.5px solid var(--card-border);
+    color: var(--text-primary);
+    backdrop-filter: blur(10px);
+  }
+  .btn-ghost:hover { background: rgba(255,255,255,0.5); }
+  .btn-large { padding: 1.1rem 2.6rem; font-size: 1.15rem; }
+  .btn-sm { padding: 0.55rem 1.3rem; font-size: 0.85rem; }
+
+  /* =============================================
+     HERO SECTION
+  ============================================= */
+  #hero { text-align: center; padding: 6rem 1.5rem 4rem; }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    background: var(--card-bg); border: 1px solid var(--card-border);
+    border-radius: 99px; padding: 0.4rem 1.2rem;
+    font-size: 0.85rem; font-weight: 600; color: var(--accent-purple);
+    backdrop-filter: blur(10px); margin-bottom: 1.5rem;
+    animation: pulse-badge 2s ease-in-out infinite;
+  }
+  @keyframes pulse-badge {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(168,85,247,0.3); }
+    50% { box-shadow: 0 0 0 10px rgba(168,85,247,0); }
+  }
+  .hero-title {
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 900; line-height: 1.15;
+    background: linear-gradient(135deg, #f472b6, #a855f7, #60a5fa);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 1rem;
+  }
+  .hero-sub {
+    font-size: clamp(1rem, 2.5vw, 1.25rem);
+    color: var(--text-secondary); max-width: 650px; margin: 0 auto 2rem;
+    line-height: 1.65;
+  }
+  .hero-actions { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+
+  /* =============================================
+     HEARTBEAT LINE
+  ============================================= */
+  .heartbeat-wrap {
+    margin: 2.5rem auto; max-width: 600px;
+    height: 80px; position: relative;
+  }
+  .heartbeat-svg { width: 100%; height: 100%; }
+  .hb-path {
+    fill: none; stroke: url(#hbGrad); stroke-width: 2.5;
+    stroke-dasharray: 800;
+    stroke-dashoffset: 800;
+    animation: drawLine 2s ease-out forwards, pulseGlow 1.5s ease-in-out 2s infinite;
+  }
+  @keyframes drawLine {
+    to { stroke-dashoffset: 0; }
+  }
+  @keyframes pulseGlow {
+    0%, 100% { filter: drop-shadow(0 0 3px rgba(244,114,182,0.5)); }
+    50% { filter: drop-shadow(0 0 10px rgba(244,114,182,0.9)); }
+  }
+
+  /* =============================================
+     STATS SECTION
+  ============================================= */
+  .stats-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem; margin-top: 1.5rem;
+  }
+  .stat-card {
+    background: var(--card-bg); border: 1px solid var(--card-border);
+    border-radius: 18px; padding: 1.4rem 1rem; text-align: center;
+    backdrop-filter: blur(15px);
+    transition: transform 0.3s;
+  }
+  .stat-card:hover { transform: translateY(-5px) scale(1.02); }
+  .stat-emoji { font-size: 2.2rem; margin-bottom: 0.4rem; }
+  .stat-value {
+    font-size: 1.7rem; font-weight: 900;
+    background: linear-gradient(135deg, #f472b6, #a855f7);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .stat-label { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; margin-top: 0.2rem; }
+
+  /* =============================================
+     REFRESH COUNTER
+  ============================================= */
+  .refresh-wrap {
+    text-align: center; padding: 2rem;
+    background: var(--card-bg); border: 1px solid var(--card-border);
+    border-radius: 22px; backdrop-filter: blur(15px);
+  }
+  .refresh-num {
+    font-size: clamp(3rem, 8vw, 5.5rem);
+    font-weight: 900;
+    background: linear-gradient(135deg, #f472b6, #a855f7, #60a5fa);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: numBounce 0.1s ease-in-out;
+  }
+  @keyframes numBounce {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+  }
+  .refresh-label { color: var(--text-muted); font-size: 0.9rem; font-weight: 600; margin-top: 0.5rem; }
+  .refresh-phone { font-size: 2.5rem; animation: shake 1s ease-in-out infinite; display: inline-block; }
+  @keyframes shake {
+    0%, 100% { transform: rotate(-5deg); }
+    50% { transform: rotate(5deg); }
+  }
+
+  /* =============================================
+     MOOD METER
+  ============================================= */
+  .mood-track {
+    display: flex; border-radius: 16px; overflow: hidden;
+    border: 1px solid var(--card-border); margin: 1.5rem 0;
+    position: relative;
+  }
+  .mood-item {
+    flex: 1; text-align: center; padding: 0.8rem 0.4rem;
+    font-size: 0.72rem; font-weight: 700; color: var(--text-muted);
+    transition: all 0.5s; cursor: default;
+    position: relative; z-index: 1;
+  }
+  .mood-item .mood-emoji { display: block; font-size: 1.5rem; margin-bottom: 0.2rem; }
+  .mood-item.active {
+    background: linear-gradient(135deg, rgba(244,114,182,0.4), rgba(168,85,247,0.4));
+    color: var(--text-primary);
+    border-radius: 14px;
+  }
+  .mood-item.active .mood-emoji { animation: moodBounce 0.5s ease; }
+  @keyframes moodBounce {
+    0% { transform: scale(0.5); }
+    60% { transform: scale(1.3); }
+    100% { transform: scale(1); }
+  }
+  .mood-desc {
+    text-align: center; font-size: 1rem; font-weight: 700;
+    color: var(--accent-purple); min-height: 2rem;
+    animation: fadeSlide 0.4s ease;
+  }
+  @keyframes fadeSlide {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* =============================================
+     ALERT BUTTON
+  ============================================= */
+  .alert-section { text-align: center; }
+  .alert-radar {
+    width: 120px; height: 120px; border-radius: 50%;
+    margin: 0 auto 1.5rem;
+    background: radial-gradient(circle, rgba(244,114,182,0.2) 0%, rgba(168,85,247,0.1) 70%, transparent 100%);
+    border: 2px solid var(--accent-pink);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 3rem; position: relative;
+    animation: radarPulse 2s ease-in-out infinite;
+  }
+  .radar-ring {
+    position: absolute; inset: -12px;
+    border: 2px solid rgba(244,114,182,0.3);
+    border-radius: 50%;
+    animation: radarExpand 2s ease-out infinite;
+  }
+  .radar-ring:nth-child(2) { inset: -24px; animation-delay: 0.5s; }
+  .radar-ring:nth-child(3) { inset: -36px; animation-delay: 1s; }
+  @keyframes radarExpand {
+    0% { transform: scale(0.8); opacity: 0.8; }
+    100% { transform: scale(1.2); opacity: 0; }
+  }
+  @keyframes radarPulse {
+    0%, 100% { box-shadow: 0 0 20px rgba(244,114,182,0.3); }
+    50% { box-shadow: 0 0 40px rgba(244,114,182,0.7); }
+  }
+  .radar-status {
+    margin: 1rem 0; font-size: 0.9rem; color: var(--text-muted);
+    font-weight: 600;
+  }
+  .radar-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+    background: #f472b6; margin-right: 6px;
+    animation: blink 1s ease-in-out infinite;
+  }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
+
+  /* =============================================
+     ONLINE STATUS
+  ============================================= */
+  .status-bar {
+    display: flex; align-items: center; gap: 0.8rem;
+    background: var(--card-bg); border: 1px solid var(--card-border);
+    border-radius: 14px; padding: 0.9rem 1.2rem;
+    backdrop-filter: blur(10px); margin: 1rem 0;
+  }
+  .status-avatar {
+    width: 42px; height: 42px; border-radius: 50%;
+    background: linear-gradient(135deg, #f472b6, #a855f7);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem; position: relative; flex-shrink: 0;
+  }
+  .status-dot {
+    position: absolute; bottom: 1px; right: 1px;
+    width: 12px; height: 12px; border-radius: 50%;
+    background: #9ca3af; border: 2px solid white;
+    animation: pulseGray 2s ease-in-out infinite;
+  }
+  @keyframes pulseGray {
+    0%, 100% { background: #9ca3af; }
+    50% { background: #6b7280; }
+  }
+  .status-info { flex: 1; }
+  .status-name { font-weight: 700; font-size: 0.95rem; }
+  .status-text { font-size: 0.78rem; color: var(--text-muted); }
+  .status-searching { font-size: 0.8rem; color: var(--accent-purple); font-weight: 600;
+    animation: pulse 1.5s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+  /* =============================================
+     COMPLAINT GENERATOR
+  ============================================= */
+  .complaint-box {
+    min-height: 100px; display: flex; align-items: center; justify-content: center;
+    padding: 1.5rem; text-align: center;
+    font-size: 1.05rem; font-weight: 600; line-height: 1.6;
+    color: var(--text-primary);
+    background: var(--card-bg); border: 1px solid var(--card-border);
+    border-radius: 18px; margin: 1rem 0;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s; min-height: 120px;
+  }
+  .complaint-emoji { font-size: 2rem; margin-bottom: 0.5rem; display: block; }
+
+  /* =============================================
+     TIMELINE
+  ============================================= */
+  .timeline { position: relative; padding: 0.5rem 0; }
+  .timeline::before {
+    content: '';
+    position: absolute; left: 20px; top: 0; bottom: 0; width: 2px;
+    background: linear-gradient(to bottom, #f472b6, #a855f7, #60a5fa);
+    border-radius: 99px;
+  }
+  .tl-item {
+    display: flex; gap: 1rem; padding: 0.8rem 0 0.8rem 1rem;
+    position: relative; animation: slideRight 0.5s ease both;
+  }
+  .tl-dot {
+    width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.7rem; margin-left: -1px; z-index: 1;
+    background: linear-gradient(135deg, #f472b6, #a855f7);
+    color: white; border: 2px solid white;
+    box-shadow: 0 2px 8px rgba(168,85,247,0.3);
+  }
+  .tl-content {
+    background: var(--card-bg); border: 1px solid var(--card-border);
+    border-radius: 14px; padding: 0.7rem 1rem; flex: 1;
+    backdrop-filter: blur(10px); transition: transform 0.2s;
+  }
+  .tl-content:hover { transform: translateX(4px); }
+  .tl-time { font-size: 0.75rem; color: var(--accent-purple); font-weight: 700; }
+  .tl-text { font-size: 0.9rem; font-weight: 600; color: var(--text-primary); }
+  .tl-sub { font-size: 0.78rem; color: var(--text-muted); margin-top: 0.15rem; }
+  @keyframes slideRight {
+    from { opacity: 0; transform: translateX(-20px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  /* =============================================
+     ACHIEVEMENT BADGES
+  ============================================= */
+  .badges-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem; margin-top: 1.5rem;
+  }
+  .badge-card {
+    background: var(--card-bg); border: 1px solid var(--card-border);
+    border-radius: 18px; padding: 1.2rem; text-align: center;
+    backdrop-filter: blur(15px); transition: transform 0.3s, box-shadow 0.3s;
+    cursor: default;
+  }
+  .badge-card:hover {
+    transform: translateY(-5px) rotate(2deg);
+    box-shadow: 0 12px 35px rgba(168,85,247,0.25);
+  }
+  .badge-icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
+  .badge-name { font-size: 0.85rem; font-weight: 800; color: var(--accent-purple); }
+  .badge-desc { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.2rem; }
+  .badge-glow { filter: drop-shadow(0 0 8px rgba(244,114,182,0.6)); }
+
+  /* =============================================
+     APPRECIATION SECTION
+  ============================================= */
+  .appreciation-card {
+    text-align: center;
+    background: linear-gradient(135deg, rgba(244,114,182,0.15), rgba(168,85,247,0.15), rgba(96,165,250,0.15));
+    border: 1px solid var(--card-border);
+    border-radius: 28px; padding: 3rem 2rem;
+    backdrop-filter: blur(20px);
+  }
+  .appreciation-heart {
+    font-size: 4rem; margin-bottom: 1rem;
+    animation: heartbeat 1.2s ease-in-out infinite;
+    display: block;
+  }
+  @keyframes heartbeat {
+    0%, 100% { transform: scale(1); }
+    14% { transform: scale(1.15); }
+    28% { transform: scale(1); }
+    42% { transform: scale(1.12); }
+    70% { transform: scale(1); }
+  }
+  .appreciation-title {
+    font-size: clamp(1.5rem, 4vw, 2.2rem);
+    font-weight: 900;
+    background: linear-gradient(135deg, #f472b6, #a855f7);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text; margin-bottom: 1rem;
+  }
+  .appreciation-text {
+    font-size: 1rem; line-height: 1.8;
+    color: var(--text-secondary); max-width: 600px; margin: 0 auto 1.5rem;
+  }
+
+  /* =============================================
+     FORGIVENESS SECTION
+  ============================================= */
+  .forgiveness-section { text-align: center; padding-bottom: 6rem; }
+  .forgiven-msg {
+    display: none; margin-top: 1.5rem; padding: 1.2rem 2rem;
+    background: linear-gradient(135deg, rgba(244,114,182,0.2), rgba(168,85,247,0.2));
+    border: 1px solid rgba(244,114,182,0.4); border-radius: 18px;
+    font-size: 1.1rem; font-weight: 700; color: var(--accent-purple);
+    animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .forgiven-msg.show { display: block; }
+  @keyframes popIn {
+    from { transform: scale(0.6); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  /* =============================================
+     POPUP / MODAL
+  ============================================= */
+  .popup-overlay {
+    display: none; position: fixed; inset: 0; z-index: 500;
+    background: rgba(0,0,0,0.45);
+    align-items: center; justify-content: center;
+    backdrop-filter: blur(6px);
+  }
+  .popup-overlay.show { display: flex; }
+  .popup-box {
+    background: linear-gradient(135deg, #fce4f5, #ede4fc);
+    border-radius: 24px; padding: 2.5rem; max-width: 400px; width: 90%;
+    text-align: center; animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+  }
+  [data-theme="dark"] .popup-box {
+    background: linear-gradient(135deg, #2d1b4e, #1a0533);
+    border: 1px solid rgba(244,114,182,0.3);
+  }
+  .popup-emoji { font-size: 3.5rem; margin-bottom: 0.8rem; display: block; animation: heartbeat 1s infinite; }
+  .popup-title { font-size: 1.3rem; font-weight: 900; color: var(--accent-purple); margin-bottom: 0.6rem; }
+  .popup-text { font-size: 0.95rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 1.2rem; }
+  .popup-close { position: absolute; top: 1rem; right: 1rem; background: none; border: none; font-size: 1.4rem; cursor: pointer; }
+
+  /* =============================================
+     CONFETTI
+  ============================================= */
+  .confetti-piece {
+    position: fixed; width: 10px; height: 10px;
+    pointer-events: none; z-index: 600;
+    animation: confettiFall linear forwards;
+    border-radius: 2px;
+  }
+  @keyframes confettiFall {
+    0% { transform: translateY(-10px) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+  }
+
+  /* =============================================
+     SECTION HEADERS
+  ============================================= */
+  .section-header { text-align: center; margin-bottom: 2.5rem; }
+  .section-tag {
+    display: inline-block; background: linear-gradient(135deg, rgba(244,114,182,0.2), rgba(168,85,247,0.2));
+    border: 1px solid rgba(168,85,247,0.3); border-radius: 99px;
+    padding: 0.3rem 1rem; font-size: 0.8rem; font-weight: 700;
+    color: var(--accent-purple); margin-bottom: 0.8rem; letter-spacing: 0.05em;
+  }
+  .section-title {
+    font-size: clamp(1.6rem, 4vw, 2.5rem); font-weight: 900;
+    color: var(--text-primary); line-height: 1.25;
+  }
+  .section-sub { color: var(--text-muted); margin-top: 0.5rem; font-size: 0.95rem; }
+
+  /* =============================================
+     DIVIDER
+  ============================================= */
+  .divider {
+    height: 1px; max-width: 900px; margin: 0 auto;
+    background: linear-gradient(90deg, transparent, rgba(168,85,247,0.3), transparent);
+  }
+
+  /* =============================================
+     FOOTER
+  ============================================= */
+  footer {
+    text-align: center; padding: 2rem;
+    color: var(--text-muted); font-size: 0.85rem;
+    border-top: 1px solid var(--glass-border);
+  }
+  footer span { color: var(--accent-pink); }
+
+  /* =============================================
+     ANIMATIONS UTILITY
+  ============================================= */
+  .fade-in { animation: fadeIn 0.6s ease both; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  .wiggle { animation: wiggle 0.4s ease; }
+  @keyframes wiggle { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-5deg); } 75% { transform: rotate(5deg); } }
+
+  /* =============================================
+     RESPONSIVE
+  ============================================= */
+  @media (max-width: 640px) {
+    .section { padding: 3.5rem 1rem; }
+    .glass-card { padding: 1.3rem; }
+    .timeline::before { left: 16px; }
+    .badges-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- =============================================
+     LOADING SCREEN
+============================================= -->
+<div id="loading-screen">
+  <div class="loading-pulse">🩺</div>
+  <div class="loading-text">Connecting to Doctor's WhatsApp...</div>
+  <div class="loading-sub">Please hold. Your patience is appreciated. (Unlike the Doctor's reply.)</div>
+  <div class="loading-bar-wrap"><div class="loading-bar"></div></div>
+</div>
+
+<!-- =============================================
+     PARTICLE BACKGROUND
+============================================= -->
+<div id="particles"></div>
+
+<!-- =============================================
+     FLOATING EMOJIS
+============================================= -->
+<div id="float-container"></div>
+
+<!-- =============================================
+     NAVIGATION
+============================================= -->
+<nav>
+  <div class="nav-logo">💊 DearDoctor</div>
+  <ul class="nav-links">
+    <li><a href="#hero">Home</a></li>
+    <li><a href="#stats">Damage Report</a></li>
+    <li><a href="#complaint">Complaints</a></li>
+    <li><a href="#timeline">Timeline</a></li>
+    <li><a href="#appreciation">Love Letter</a></li>
+  </ul>
+  <div class="nav-actions">
+    <button class="icon-btn" id="sound-btn" title="Toggle Sound" aria-label="Toggle sound">🔇</button>
+    <button class="icon-btn" id="dark-btn" title="Toggle Dark Mode" aria-label="Toggle dark mode">🌙</button>
+  </div>
+</nav>
+
+<!-- =============================================
+     MAIN CONTENT
+============================================= -->
+<main>
+
+  <!-- HERO -->
+  <section id="hero" class="section" style="text-align:center; padding-top:7rem;">
+    <div class="hero-badge">🚨 PATIENT EMERGENCY IN PROGRESS 🚨</div>
+    <h1 class="hero-title">Doctor, It Has Been 5 Minutes...<br>Or Maybe 5 Years 😭</h1>
+    <p class="hero-sub">Your patient has refreshed WhatsApp approximately <strong>7,482 times</strong> waiting for you to come online. The phone screen has burn-in. The thumbs are tired. The hope is fading.</p>
+
+    <!-- Heartbeat SVG -->
+    <div class="heartbeat-wrap">
+      <svg class="heartbeat-svg" viewBox="0 0 600 80" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="hbGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:#f472b6"/>
+            <stop offset="50%" style="stop-color:#a855f7"/>
+            <stop offset="100%" style="stop-color:#60a5fa"/>
+          </linearGradient>
+        </defs>
+        <path class="hb-path" d="M0,40 L80,40 L110,40 L125,10 L140,70 L155,20 L170,60 L185,40 L230,40 L260,40 L275,10 L290,70 L305,20 L320,60 L335,40 L380,40 L410,40 L425,10 L440,70 L455,20 L470,60 L485,40 L600,40"/>
+      </svg>
+    </div>
+
+    <div class="hero-actions">
+      <a href="#alert" class="btn btn-primary btn-large">📡 Send Emergency Signal</a>
+      <a href="#complaint" class="btn btn-ghost btn-large">📝 File Complaint</a>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- STATS / WAITING COUNTER -->
+  <section id="stats" class="section">
+    <div class="section-header">
+      <div class="section-tag">📊 DAMAGE REPORT</div>
+      <h2 class="section-title">The Numbers Don't Lie 😤</h2>
+      <p class="section-sub">Real-time tracking of patient suffering</p>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-emoji">📅</div>
+        <div class="stat-value" id="days-val">0</div>
+        <div class="stat-label">DAYS WAITING</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-emoji">⏰</div>
+        <div class="stat-value" id="hours-val">999</div>
+        <div class="stat-label">HOURS WAITING</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-emoji">💔</div>
+        <div class="stat-value" id="damage-val">∞</div>
+        <div class="stat-label">EMOTIONAL DAMAGE</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-emoji">☕</div>
+        <div class="stat-value" id="coffee-val">47</div>
+        <div class="stat-label">COFFEES CONSUMED</div>
+      </div>
+    </div>
+
+    <!-- Refresh Counter -->
+    <div class="refresh-wrap glass-card" style="margin-top:1.5rem; background: var(--card-bg);">
+      <div class="refresh-phone">📱</div>
+      <div class="refresh-num" id="refresh-num">7,482</div>
+      <div class="refresh-label">WhatsApp Refreshes and Counting...</div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- MOOD METER -->
+  <section class="section-sm" style="max-width:900px; margin:0 auto; padding: 3rem 1.5rem;">
+    <div class="section-header">
+      <div class="section-tag">🎭 MOOD TRACKER</div>
+      <h2 class="section-title">Current Patient Status</h2>
+    </div>
+    <div class="glass-card">
+      <div class="mood-track" id="mood-track">
+        <div class="mood-item" data-mood="0"><span class="mood-emoji">😊</span>Happy</div>
+        <div class="mood-item" data-mood="1"><span class="mood-emoji">😐</span>Concerned</div>
+        <div class="mood-item" data-mood="2"><span class="mood-emoji">😔</span>Waiting</div>
+        <div class="mood-item" data-mood="3"><span class="mood-emoji">😭</span>Dramatic</div>
+        <div class="mood-item" data-mood="4"><span class="mood-emoji">💀</span>Existential</div>
+      </div>
+      <div class="mood-desc" id="mood-desc">Loading patient status...</div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ALERT / RADAR -->
+  <section id="alert" class="section">
+    <div class="section-header">
+      <div class="section-tag">🦇 BAT-SIGNAL</div>
+      <h2 class="section-title">Emergency Alert System</h2>
+      <p class="section-sub">Highly advanced, definitely works, Doctor will definitely respond</p>
+    </div>
+
+    <div class="glass-card alert-section">
+      <!-- Doctor Radar -->
+      <div style="margin-bottom: 2rem;">
+        <div class="section-tag" style="margin-bottom:1rem;">📡 DOCTOR RADAR</div>
+        <div class="alert-radar">
+          <div class="radar-ring"></div>
+          <div class="radar-ring"></div>
+          <div class="radar-ring"></div>
+          👩‍⚕️
+        </div>
+        <p class="radar-status">
+          <span class="radar-dot"></span>
+          Searching for Doctor... (Signal strength: 0 bars)
+        </p>
+      </div>
+
+      <!-- Online Status Detector -->
+      <div class="status-bar">
+        <div class="status-avatar">
+          👩‍⚕️
+          <div class="status-dot"></div>
+        </div>
+        <div class="status-info">
+          <div class="status-name">My Doctor 🩺</div>
+          <div class="status-text">Last seen: In another dimension, probably</div>
+        </div>
+        <div class="status-searching">🔄 Searching...</div>
+      </div>
+
+      <br>
+      <button class="btn btn-primary btn-large" onclick="sendAlert()" style="width:100%; max-width:380px;">
+        🚨 Doctor Please Come Online
+      </button>
+      <p style="font-size:0.8rem; color:var(--text-muted); margin-top:0.8rem;">
+        Warning: Bat-Signal may or may not reach doctor. Results vary. Side effects include false hope.
+      </p>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- COMPLAINT GENERATOR -->
+  <section id="complaint" class="section">
+    <div class="section-header">
+      <div class="section-tag">📝 COMPLAINT OFFICE</div>
+      <h2 class="section-title">Generate My Complaint</h2>
+      <p class="section-sub">Powered by genuine patient frustration™</p>
+    </div>
+    <div class="glass-card">
+      <div class="complaint-box" id="complaint-box">
+        <div>
+          <span class="complaint-emoji">👆</span>
+          Press the button below to unleash your inner dramatic patient
+        </div>
+      </div>
+      <div style="text-align:center; margin-top:1rem; display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="generateComplaint()">🎲 Generate My Complaint</button>
+        <button class="btn btn-ghost" onclick="copyComplaint()">📋 Copy & Send to Doctor</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- TIMELINE -->
+  <section id="timeline" class="section">
+    <div class="section-header">
+      <div class="section-tag">📖 CASE HISTORY</div>
+      <h2 class="section-title">The Dramatic Timeline</h2>
+      <p class="section-sub">A blow-by-blow account of today's suffering</p>
+    </div>
+    <div class="timeline" id="timeline-list"></div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ACHIEVEMENT BADGES -->
+  <section class="section">
+    <div class="section-header">
+      <div class="section-tag">🏆 ACHIEVEMENTS UNLOCKED</div>
+      <h2 class="section-title">Patient Awards Ceremony</h2>
+      <p class="section-sub">Hard earned. Nobody asked for these. Here we are.</p>
+    </div>
+    <div class="badges-grid">
+      <div class="badge-card">
+        <div class="badge-icon badge-glow">🔄</div>
+        <div class="badge-name">Refresh Master</div>
+        <div class="badge-desc">7,482 refreshes without a break. A true athlete.</div>
+      </div>
+      <div class="badge-card">
+        <div class="badge-icon badge-glow">⏳</div>
+        <div class="badge-name">Waiting Champion</div>
+        <div class="badge-desc">Out-waited all other patients. Legendary patience.</div>
+      </div>
+      <div class="badge-card">
+        <div class="badge-icon badge-glow">🎖️</div>
+        <div class="badge-name">Doctor Fan Club</div>
+        <div class="badge-desc">President, VP, and only member of the club.</div>
+      </div>
+      <div class="badge-card">
+        <div class="badge-icon badge-glow">🧘</div>
+        <div class="badge-name">Patience Level 9999</div>
+        <div class="badge-desc">A monk would be jealous. A monk would also have given up.</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- APPRECIATION -->
+  <section id="appreciation" class="section">
+    <div class="appreciation-card">
+      <span class="appreciation-heart">💝</span>
+      <div class="appreciation-title">The Truth (Don't Tell Anyone)</div>
+      <p class="appreciation-text">
+        Even though this entire website was built in a moment of dramatic impatience, the truth is — you are an absolutely amazing doctor. The kind that actually listens, actually cares, and actually makes things better. This website exists only because your patient misses your replies a little too much. Maybe a lot too much. Okay, definitely too much. 😅
+        <br><br>
+        Behind all the fake drama and complaint generators, there's genuine gratitude for everything you do. You are brilliant at what you do, and your patients are lucky to have you. Even the dramatic ones who build websites about you. 🌸
+      </p>
+      <div style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;">
+        <span style="background:rgba(244,114,182,0.15); border:1px solid rgba(244,114,182,0.3); border-radius:99px; padding:0.5rem 1.2rem; font-size:0.85rem; font-weight:700; color:var(--accent-pink);">💊 Best Doctor Ever</span>
+        <span style="background:rgba(168,85,247,0.15); border:1px solid rgba(168,85,247,0.3); border-radius:99px; padding:0.5rem 1.2rem; font-size:0.85rem; font-weight:700; color:var(--accent-purple);">⭐ 5 Star Patient Care</span>
+        <span style="background:rgba(96,165,250,0.15); border:1px solid rgba(96,165,250,0.3); border-radius:99px; padding:0.5rem 1.2rem; font-size:0.85rem; font-weight:700; color:var(--accent-blue);">🩺 Hero in White Coat</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- FORGIVENESS -->
+  <section class="section forgiveness-section">
+    <div class="section-header">
+      <div class="section-tag">🕊️ PEACE TREATY</div>
+      <h2 class="section-title">Final Resolution</h2>
+      <p class="section-sub">After much deliberation and 7,482 refreshes...</p>
+    </div>
+    <button class="btn btn-primary btn-large" onclick="forgive()" id="forgive-btn" style="font-size:1.2rem; padding:1.2rem 3rem;">
+      💖 I Forgive The Doctor
+    </button>
+    <div class="forgiven-msg" id="forgiven-msg">
+      ✨ Forgiveness Granted. Patient Happiness Restored. 💕<br>
+      <small style="font-size:0.85rem; opacity:0.75;">The doctor is still offline, but we feel better about it now.</small>
+    </div>
+    <p style="margin-top:1.5rem; color:var(--text-muted); font-size:0.85rem;">
+      * Forgiveness may be revoked if doctor takes another 5 minutes
+    </p>
+  </section>
+
+</main>
+
+<!-- FOOTER -->
+<footer>
+  <p>Made with <span>❤️</span> and <span>😤</span> by a very dramatic patient</p>
+  <p style="margin-top:0.4rem; font-size:0.78rem;">No doctors were harmed in the making of this website. (Unlike the patient's patience.)</p>
+</footer>
+
+<!-- POPUP MODAL -->
+<div class="popup-overlay" id="alert-popup">
+  <div class="popup-box">
+    <button class="popup-close" onclick="closePopup()">✕</button>
+    <span class="popup-emoji" id="popup-emoji">🦇</span>
+    <div class="popup-title" id="popup-title">Alert Sent!</div>
+    <div class="popup-text" id="popup-text">Alert sent to the Doctor's Secret Bat-Signal. Response time: Unknown. Estimated reply: Eventually. Probably. Maybe.</div>
+    <button class="btn btn-primary" onclick="closePopup()">Okay Fine 🙄</button>
+  </div>
+</div>
+
+<script>
+/* =============================================
+   DATA
+============================================= */
+const complaints = [
+  { emoji: "😩", text: "I checked WhatsApp so many times that even WhatsApp asked if I'm okay." },
+  { emoji: "💸", text: "My internet bill increased because of waiting for your reply. I'm billing you for this." },
+  { emoji: "👁️", text: "At this point I know the online/offline status screen better than my own family." },
+  { emoji: "🔋", text: "I have charged my phone 4 times today. All because of refreshing. This is your fault." },
+  { emoji: "😤", text: "My thumb has filed a formal complaint with HR about overuse from refreshing." },
+  { emoji: "🕰️", text: "Time moves differently when waiting for a doctor to come online. Like... backwards." },
+  { emoji: "🧠", text: "I Googled my symptoms instead. Now I have diagnosed myself with 7 rare diseases and one dragon allergy." },
+  { emoji: "📵", text: "I stared at 'last seen today at 9:47' for so long I memorized the font." },
+  { emoji: "😴", text: "I set an alarm every 15 minutes to check if you came online. I haven't slept. This is a medical emergency." },
+  { emoji: "🤔", text: "I started wondering if 'typing...' was just a myth, like Santa Claus or affordable healthcare." },
+  { emoji: "📱", text: "My phone's screen protector has a thumbprint permanently embedded from so many refreshes." },
+  { emoji: "🗓️", text: "I have been waiting so long I started a journal. It's now a bestselling novel titled 'The Ghost Doctor'." },
+  { emoji: "😶", text: "The 'online' indicator disappeared so fast I'm questioning if it was ever real." },
+  { emoji: "🏃", text: "I ran to my phone when it vibrated. It was a spam email. I cried a little." },
+  { emoji: "🌙", text: "I waited so long that I went through all five stages of grief. Twice." },
+  { emoji: "🎭", text: "At this point, waiting for you to come online is my full-time job. I want benefits." },
+  { emoji: "📡", text: "I upgraded to premium WiFi just to check your online status faster. No difference was observed." },
+  { emoji: "🤦", text: "I have opened and closed WhatsApp 47 times. My phone asked me to 'take a break'. My phone is more concerned than you." },
+  { emoji: "🫀", text: "My cardiologist asked why my heart rate spikes every 5 minutes. I said 'WhatsApp notifications'. She didn't understand." },
+  { emoji: "☕", text: "I've had 6 cups of coffee waiting for you. My doctor (you) would probably disapprove. Ironic." },
+  { emoji: "🦸", text: "I have been refreshing WhatsApp so long I deserve a PhD in Applied Waiting Studies." },
+  { emoji: "📊", text: "I made a spreadsheet tracking your online/offline times. The data suggests you are a ghost." },
+  { emoji: "🎵", text: "I played all my sad songs waiting for you. Spotify has now listed 'Waiting for Doctor' as a genre." },
+  { emoji: "🌍", text: "I've been waiting long enough for the Earth to complete 3% of its annual orbit. That's basically a season. WHERE ARE YOU?" },
+  { emoji: "🧊", text: "My tea went cold twice. My patience went cold once. It's not coming back." },
+  { emoji: "🎪", text: "I held an intervention for myself about my WhatsApp-checking habit. I relapsed immediately after." },
+  { emoji: "🤖", text: "I asked an AI chatbot my health question. It replied in 0.3 seconds. No offense but... wow." },
+  { emoji: "📰", text: "I started a petition titled 'Doctor Online Hours Should Be Predictable'. It has one signature. Mine." },
+  { emoji: "🏆", text: "I have been waiting so long I should receive a gold medal for patience. Also a refund." },
+  { emoji: "🎓", text: "I learned basic first aid on YouTube while waiting. I am now essentially a doctor myself. Hire me." },
+];
+
+const timelineData = [
+  { time: "08:00 AM", text: "Doctor Offline", sub: "Sent a cheerful good morning message 💬", emoji: "🌅" },
+  { time: "09:00 AM", text: "Still Offline", sub: "Refreshed WhatsApp 200 times. Arm getting tired.", emoji: "😬" },
+  { time: "10:00 AM", text: "Hope Exists!", sub: "Blue ticks appeared! Then disappeared. A hallucination.", emoji: "✨" },
+  { time: "12:00 PM", text: "Slight Panic", sub: "Googled whether doctors have tea breaks. They do. 45 min. Suspicious.", emoji: "😐" },
+  { time: "02:00 PM", text: "Major Panic", sub: "Created this website. Things are escalating.", emoji: "😰" },
+  { time: "04:00 PM", text: "Googling Symptoms", sub: "Self-diagnosed 4 diseases. One is fictional. Unsure which.", emoji: "🔍" },
+  { time: "06:00 PM", text: "Full Drama Mode", sub: "Launched website. Sent Bat-Signal. Waiting by candlelight.", emoji: "🎭" },
+];
+
+const moodTexts = [
+  "😊 Everything is fine! The doctor will reply any second now. Any. Second. Now.",
+  "😐 Okay it's been a while. That's fine. Totally normal. Very fine. Fine.",
+  "😔 The waiting is... a choice they're making. I'm okay. I'm not okay.",
+  "😭 I have refreshed WhatsApp more times than I have taken breaths today. This is a medical emergency.",
+  "💀 I have transcended waiting. I am now one with the offline status. We are the same.",
+];
+
+/* =============================================
+   INIT & LOADING
+============================================= */
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    document.getElementById('loading-screen').classList.add('hidden');
+  }, 2200);
+  initParticles();
+  initFloatingEmojis();
+  initTimeline();
+  initMoodMeter();
+  initRefreshCounter();
+  initCounters();
+});
+
+/* =============================================
+   PARTICLES
+============================================= */
+function initParticles() {
+  const container = document.getElementById('particles');
+  const colors = ['#f472b6','#a855f7','#60a5fa','#fbbf24','#34d399'];
+  for (let i = 0; i < 30; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const size = Math.random() * 10 + 4;
+    p.style.cssText = `
+      width:${size}px; height:${size}px;
+      left:${Math.random()*100}%;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      animation-duration:${Math.random()*15+8}s;
+      animation-delay:${Math.random()*10}s;
+    `;
+    container.appendChild(p);
+  }
+}
+
+/* =============================================
+   FLOATING EMOJIS
+============================================= */
+function initFloatingEmojis() {
+  const emojis = ['💊','🩺','💉','❤️','🌸','✨','💕','😭','🔔','📱','💝','🏥'];
+  const container = document.getElementById('float-container');
+  emojis.forEach((em, i) => {
+    const el = document.createElement('div');
+    el.className = 'float-emoji';
+    el.textContent = em;
+    el.style.cssText = `
+      left:${Math.random()*90+5}%;
+      animation-duration:${Math.random()*12+10}s;
+      animation-delay:${i*1.8}s;
+      font-size:${Math.random()*1+1.2}rem;
+    `;
+    container.appendChild(el);
+  });
+}
+
+/* =============================================
+   TIMELINE
+============================================= */
+function initTimeline() {
+  const list = document.getElementById('timeline-list');
+  timelineData.forEach((item, i) => {
+    const el = document.createElement('div');
+    el.className = 'tl-item';
+    el.style.animationDelay = `${i*0.15}s`;
+    el.innerHTML = `
+      <div class="tl-dot">${item.emoji}</div>
+      <div class="tl-content">
+        <div class="tl-time">${item.time}</div>
+        <div class="tl-text">${item.text}</div>
+        <div class="tl-sub">${item.sub}</div>
+      </div>
+    `;
+    list.appendChild(el);
+  });
+}
+
+/* =============================================
+   MOOD METER
+============================================= */
+let currentMood = 0;
+function initMoodMeter() {
+  updateMood(0);
+  setInterval(() => {
+    currentMood = (currentMood + 1) % 5;
+    updateMood(currentMood);
+  }, 4000);
+}
+function updateMood(idx) {
+  document.querySelectorAll('.mood-item').forEach((el, i) => {
+    el.classList.toggle('active', i === idx);
+  });
+  const desc = document.getElementById('mood-desc');
+  desc.textContent = moodTexts[idx];
+  desc.style.animation = 'none';
+  void desc.offsetWidth;
+  desc.style.animation = 'fadeSlide 0.4s ease';
+}
+
+/* =============================================
+   REFRESH COUNTER
+============================================= */
+function initRefreshCounter() {
+  let count = 7482;
+  const el = document.getElementById('refresh-num');
+  setInterval(() => {
+    count += Math.floor(Math.random() * 3 + 1);
+    el.textContent = count.toLocaleString('en-IN');
+    el.style.animation = 'none';
+    void el.offsetWidth;
+    el.style.animation = 'numBounce 0.1s ease-in-out';
+  }, 1200);
+}
+
+/* =============================================
+   STAT COUNTERS (animated)
+============================================= */
+function initCounters() {
+  const damageWords = ['Increasing...','Critical 📈','OFF THE CHARTS','∞','Immeasurable','Send Help'];
+  let di = 0;
+  setInterval(() => {
+    di = (di + 1) % damageWords.length;
+    document.getElementById('damage-val').textContent = damageWords[di];
+  }, 3000);
+
+  let coffee = 47;
+  setInterval(() => {
+    coffee++;
+    document.getElementById('coffee-val').textContent = coffee;
+  }, 8000);
+
+  // Ticking hours
+  setInterval(() => {
+    const el = document.getElementById('hours-val');
+    const v = parseInt(el.textContent) + 1;
+    el.textContent = v;
+  }, 30000);
+}
+
+/* =============================================
+   COMPLAINT GENERATOR
+============================================= */
+let lastComplaint = '';
+function generateComplaint() {
+  let pick;
+  do { pick = complaints[Math.floor(Math.random() * complaints.length)]; }
+  while (pick.text === lastComplaint && complaints.length > 1);
+  lastComplaint = pick.text;
+
+  const box = document.getElementById('complaint-box');
+  box.style.opacity = '0';
+  box.style.transform = 'translateY(10px)';
+  setTimeout(() => {
+    box.innerHTML = `<div><span class="complaint-emoji">${pick.emoji}</span>"${pick.text}"</div>`;
+    box.style.transition = 'all 0.3s';
+    box.style.opacity = '1';
+    box.style.transform = 'translateY(0)';
+  }, 200);
+}
+
+function copyComplaint() {
+  const box = document.getElementById('complaint-box');
+  const text = box.textContent.trim();
+  if (!text || text.includes('Press the button')) {
+    generateComplaint();
+    setTimeout(copyComplaint, 400);
+    return;
+  }
+  navigator.clipboard.writeText(text).then(() => {
+    showPopup('📋', 'Copied!', 'Complaint copied to clipboard. Now paste it into your WhatsApp and send it as evidence of your suffering. (Results may vary. Doctor may laugh.)');
+  }).catch(() => {
+    showPopup('📋', 'Almost!', 'Could not copy automatically — please select and copy the text manually. The struggle continues.');
+  });
+}
+
+/* =============================================
+   ALERT / BAT SIGNAL
+============================================= */
+function sendAlert() {
+  launchConfetti();
+  showPopup('🦇', 'Alert Sent To The Doctor\'s Secret Bat-Signal!', 'Your emergency signal has been transmitted via carrier pigeon, Morse code, semaphore flags, and one very persistent WhatsApp notification. Estimated response time: Soon™. Probably.');
+}
+
+/* =============================================
+   FORGIVENESS
+============================================= */
+function forgive() {
+  const btn = document.getElementById('forgive-btn');
+  const msg = document.getElementById('forgiven-msg');
+  launchHearts();
+  btn.textContent = '💖 Already Forgiven (you are amazing)';
+  btn.style.background = 'linear-gradient(135deg, #34d399, #059669)';
+  msg.classList.add('show');
+  btn.disabled = true;
+  btn.style.opacity = '0.85';
+}
+
+/* =============================================
+   POPUP
+============================================= */
+function showPopup(emoji, title, text) {
+  document.getElementById('popup-emoji').textContent = emoji;
+  document.getElementById('popup-title').textContent = title;
+  document.getElementById('popup-text').textContent = text;
+  document.getElementById('alert-popup').classList.add('show');
+}
+function closePopup() {
+  document.getElementById('alert-popup').classList.remove('show');
+}
+document.getElementById('alert-popup').addEventListener('click', function(e) {
+  if (e.target === this) closePopup();
+});
+
+/* =============================================
+   CONFETTI
+============================================= */
+function launchConfetti() {
+  const colors = ['#f472b6','#a855f7','#60a5fa','#fbbf24','#34d399','#fb923c'];
+  for (let i = 0; i < 80; i++) {
+    const c = document.createElement('div');
+    c.className = 'confetti-piece';
+    c.style.cssText = `
+      left:${Math.random()*100}vw;
+      top:0;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      width:${Math.random()*10+6}px;
+      height:${Math.random()*10+6}px;
+      border-radius:${Math.random()>0.5?'50%':'2px'};
+      animation-duration:${Math.random()*2+1.5}s;
+      animation-delay:${Math.random()*0.8}s;
+    `;
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 4000);
+  }
+}
+
+/* =============================================
+   HEART BURST
+============================================= */
+function launchHearts() {
+  const emojis = ['💖','💕','💗','💓','❤️','🩷'];
+  for (let i = 0; i < 30; i++) {
+    const h = document.createElement('div');
+    h.style.cssText = `
+      position:fixed; left:${Math.random()*100}vw; bottom:0;
+      font-size:${Math.random()*20+18}px; pointer-events:none; z-index:600;
+      animation: floatUp ${Math.random()*3+2}s linear forwards;
+      animation-delay:${Math.random()*1}s;
+    `;
+    h.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+    document.body.appendChild(h);
+    setTimeout(() => h.remove(), 6000);
+  }
+}
+
+/* =============================================
+   DARK MODE
+============================================= */
+const darkBtn = document.getElementById('dark-btn');
+darkBtn.addEventListener('click', () => {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  darkBtn.textContent = isDark ? '🌙' : '☀️';
+});
+
+/* =============================================
+   SOUND TOGGLE (fun fake)
+============================================= */
+let soundOn = false;
+const soundBtn = document.getElementById('sound-btn');
+soundBtn.addEventListener('click', () => {
+  soundOn = !soundOn;
+  soundBtn.textContent = soundOn ? '🔊' : '🔇';
+  if (soundOn) {
+    // Fake audio: create oscillator for a cute beep
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.frequency.value = 880;
+      gain.gain.setValueAtTime(0.1, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+      osc.start(); osc.stop(ctx.currentTime + 0.3);
+    } catch(e) {}
+  }
+});
+
+/* =============================================
+   INTERSECTION OBSERVER for animations
+============================================= */
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('fade-in');
+    }
+  });
+}, { threshold: 0.15 });
+
+document.querySelectorAll('.glass-card, .stat-card, .badge-card, .tl-item').forEach(el => {
+  observer.observe(el);
+});
+</script>
+</body>
+</html>
